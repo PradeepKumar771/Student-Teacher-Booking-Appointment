@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student-Teacher Appointment Booking</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Ensures the content fills the space and the footer sticks to the bottom */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        #mainContent {
+            flex-grow: 1; 
+        }
+    </style>
+</head>
+<body class="bg-body-background">
+
+    <div class="w-full bg-primary-color shadow-md">
+        <header class="container mx-auto p-4 max-w-7xl flex justify-between items-center relative">
+            
+            <div class="w-1/3"></div>
+
+            <div class="w-1/3 flex justify-center">
+                <h1 class="text-3xl font-bold text-white">Scheduler</h1>
+            </div>
+            
+            <div id="userInfo" class="w-1/3 flex justify-end items-center space-x-4">
+                <span id="welcomeMessage" class="text-white font-medium"></span>
+                <button id="logoutButton" class="hidden bg-danger-color hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition-all">
+                    Logout
+                </button>
+            </div>
+        </header>
+    </div>
+    
+    <div id="mainContent" class="container mx-auto p-4 max-w-7xl">
+
+        <div id="loadingView" class="view flex justify-center items-center p-10">
+            <div class="loader"></div>
+            <p class="ml-4 text-text-color-light">Loading your dashboard...</p>
+        </div>
+
+        <div id="authView" class="view">
+            <div class="max-w-md mx-auto card-background p-8 rounded-lg shadow-xl">
+                <div class="flex border-b border-gray-200">
+                    <button id="loginTabButton" class="flex-1 py-2 font-semibold text-primary-color border-b-2 border-primary-color">Login</button>
+                    <button id="registerTabButton" class="flex-1 py-2 font-semibold text-text-color-light">Student Register</button>
+                </div>
+
+                <form id="loginForm" class="mt-6 space-y-4">
+                    <h2 class="text-2xl font-semibold text-center text-text-color">Login to your Account</h2>
+                    <div>
+                        <label for="loginEmail" class="block text-sm font-medium text-text-color-light">Email</label>
+                        <input type="email" id="loginEmail" required class="input-field">
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-text-color-light">Password</label>
+                        <input type="password" id="loginPassword" required class="input-field">
+                    </div>
+                    <button type="submit" class="w-full bg-primary-color hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all">Login</button>
+                    <p id="loginError" class="text-danger-color text-sm mt-2"></p>
+                </form>
+
+                <form id="registerForm" class="mt-6 space-y-4" style="display: none;">
+                    <h2 class="text-2xl font-semibold text-center text-text-color">Create Student Account</h2>
+                    <div>
+                        <label for="registerName" class="block text-sm font-medium text-text-color-light">Full Name</label>
+                        <input type="text" id="registerName" required class="input-field">
+                    </div>
+                    <div>
+                        <label for="registerEmail" class="block text-sm font-medium text-text-color-light">Email</label>
+                        <input type="email" id="registerEmail" required class="input-field">
+                    </div>
+                    <div>
+                        <label for="registerPassword" class="block text-sm font-medium text-text-color-light">Password</details>
+                        <input type="password" id="registerPassword" required class="input-field">
+                    </div>
+                    <button type="submit" class="w-full bg-success-color hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all">Register</button>
+                    <p id="registerError" class="text-danger-color text-sm mt-2"></p>
+                    <p id="registerSuccess" class="text-success-color text-sm mt-2" style="display: none;">Registration successful! Please wait for admin approval.</p>
+                </form>
+            </div>
+        </div>
+        
+        <div id="pendingView" class="view max-w-md mx-auto card-background p-8 rounded-lg shadow-xl text-center">
+            <h2 class="text-2xl font-semibold text-warning-color mb-4">Account Pending Approval</h2>
+            <p class="text-text-color-light">Your student account registration has been received. An administrator will review it shortly. Please check back later.</p>
+        </div>
+
+        <div id="adminView" class="view">
+            <h2 class="text-2xl font-semibold mb-4 text-text-color">Admin Dashboard</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card-background rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-primary-color">Approve Students</h3>
+                    <div id="studentApprovalList" class="space-y-4 max-h-96 overflow-y-auto">
+                        </div>
+                </div>
+
+                <div class="card-background rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-primary-color">Manage Teachers</h3>
+                    
+                    <div class="mb-4 p-3 bg-warning-bg border-l-4 border-warning-color text-text-color-light">
+                        <p class="font-bold text-text-color">Admin Workflow (CRITICAL):</p>
+                        <p class="sm">1. **Manual Auth:** Create the teacher's login in the Firebase **Authentication** console first.</p>
+                        <p class="sm">2. **Copy UID:** Copy the long **User UID** provided by Firebase for the new user.</p>
+                        <p class="sm">3. **Fill Form:** Paste the UID below to save their profile details.</p>
+                    </div>
+
+                    <form id="addTeacherForm" class="space-y-4 mb-6">
+                        <input type="text" id="teacherUid" placeholder="Firebase User UID (e.g., QCI...)" required class="input-field">
+                        <input type="text" id="teacherName" placeholder="Full Name" required class="input-field">
+                        <input type="email" id="teacherEmail" placeholder="Email (must match Auth user)" required class="input-field">
+                        <input type="text" id="teacherDept" placeholder="Department" required class="input-field">
+                        <input type="text" id="teacherSubject" placeholder="Subject" required class="input-field">
+                        <button type="submit" class="w-full bg-success-color hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg">Save Teacher Profile</button>
+                        <p id="addTeacherError" class="text-danger-color text-sm"></p>
+                        <p id="addTeacherSuccess" class="text-success-color text-sm"></p>
+                    </form>
+                    
+                    <div id="teacherList" class="space-y-4 max-h-64 overflow-y-auto">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="teacherView" class="view">
+            <h2 class="text-2xl font-semibold mb-4 text-text-color">Teacher Dashboard</h2>
+            <div class="card-background rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold mb-4 text-primary-color">All Appointments</h3>
+                <div id="teacherAppointmentList" class="space-y-4 max-h-screen overflow-y-auto">
+                    </div>
+            </div>
+        </div>
+
+        <div id="studentView" class="view">
+            <h2 class="text-2xl font-semibold mb-4 text-text-color">Student Dashboard</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card-background rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-primary-color">Book an Appointment</h3>
+                    <form id="bookAppointmentForm" class="space-y-4">
+                        <div>
+                            <label for="teacherSearch" class="block text-sm font-medium text-text-color-light">Search Teacher (by Subject or Name)</label>
+                            <input type="text" id="teacherSearch" class="input-field">
+                            <div id="teacherSearchResults" class="mt-2 space-y-2 max-h-40 overflow-y-auto"></div>
+                        </div>
+                        <input type="hidden" id="selectedTeacherId"> 
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-text-color-light">Selected Teacher</label>
+                            <p id="selectedTeacherName" class="mt-1 text-text-color font-semibold">None</p>
+                        </div>
+                        
+                        <div>
+                            <label for="appointmentTime" class="block text-sm font-medium text-text-color-light">Proposed Date & Time</label>
+                            <input type="datetime-local" id="appointmentTime" required class="input-field">
+                        </div>
+                        <div>
+                            <label for="appointmentPurpose" class="block text-sm font-medium text-text-color-light">Purpose & Message</label>
+                            <textarea id="appointmentPurpose" rows="3" required class="input-field"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-primary-color hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all">Book Appointment</button>
+                        <p id="bookingSuccess" class="text-success-color text-sm mt-2"></p>
+                    </form>
+                </div>
+
+                <div class="card-background rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-primary-color">My Appointments</h3>
+                    <div id="studentAppointmentList" class="space-y-4 max-h-[32rem] overflow-y-auto">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+    </div> 
+    
+    <footer class="w-full bg-primary-color py-4 mt-6">
+        <div class="container mx-auto max-w-7xl text-center">
+            <p class="text-white text-sm">&copy; 2025 Student-Teacher Scheduler. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>
